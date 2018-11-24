@@ -26,7 +26,20 @@ config UART_RTS_GPIO
 	range 0 34
 	default 27
 	help
-		GPIO number (IOxx) for serial data RTS output. Low level enables data reception from the host.
+		GPIO number (IOxx) for serial data RTS output. Low level enables data reception from RX line.
+
+config UART_CTS_GPIO
+    int "UART CTS GPIO number"
+	range 0 34
+	default 14
+	help
+		GPIO number (IOxx) for serial data CTS input. Low level enables data transmission to TX line.
+
+config UART_CTS_EN
+    bool "UART CTS enable"
+	default n
+	help
+		Enable using CTS input. Low level on this pin enables data transmission to TX line.
 
 config UART_BITRATE
     int "UART baud rate"
@@ -34,6 +47,13 @@ config UART_BITRATE
 	default 921600
 	help
 		UART data transfer rate in bits per second.
+
+config UART_BUFF_SIZE
+    int "UART buffer size (KB)"
+	range 1 32
+	default 17
+	help
+		UART data buffer size in kilobytes.
 
 config DEV_NAME_PREFIX
     string "Bluetooth device name prefix"

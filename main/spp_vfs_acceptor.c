@@ -49,15 +49,18 @@
 #define BT_UART_TX_GPIO    CONFIG_UART_TX_GPIO
 #define BT_UART_RX_GPIO    CONFIG_UART_RX_GPIO
 #define BT_UART_RTS_GPIO   CONFIG_UART_RTS_GPIO
-#define BT_UART_CTS_GPIO  (UART_PIN_NO_CHANGE)
+#define BT_UART_CTS_GPIO   CONFIG_UART_CTS_GPIO
 
 #define BT_UART_BITRATE    CONFIG_UART_BITRATE
-#define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_RTS
 
-// UART is transmitting data received via slow BT link so small buffer is enough
-#define BT_UART_TX_BUF_SZ (1024)
-// Allocate receive buffer able to keep the maximum transfer size from the peer
-#define BT_UART_RX_BUF_SZ (17*1024)
+#ifdef CONFIG_UART_CTS_EN
+#define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_CTS_RTS
+#else
+#define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_RTS
+#endif
+
+#define BT_UART_RX_BUF_SZ (1024 * CONFIG_UART_BUFF_SIZE)
+#define BT_UART_TX_BUF_SZ BT_UART_RX_BUF_SZ
 
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_VFS;
 
@@ -69,15 +72,15 @@ static uint8_t spp_buff[SPP_BUFF_SZ];
 
 static void spp_read_handle(void * param)
 {
-    int size = 0;
     int fd = (int)param;
 
     ESP_LOGI(SPP_TAG, "BT connected");
     gpio_set_level(BT_CONNECTED_GPIO, 1);
+    uart_flush(UART_NUM_1);
 
     for (;;) {
         // Read BT first
-        size = read(fd, spp_buff, SPP_BUFF_SZ);
+        int size = read(fd, spp_buff, SPP_BUFF_SZ);
         if (size < 0) {
             goto disconnected;
         }
