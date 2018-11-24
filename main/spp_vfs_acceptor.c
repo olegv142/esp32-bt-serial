@@ -36,9 +36,13 @@
 #include "esp_vfs.h"
 #include "sys/unistd.h"
 
+#include "sdkconfig.h"
+
 #define SPP_TAG "SPP_ACCEPTOR_DEMO"
 #define SPP_SERVER_NAME "SPP_SERVER"
 #define EXCAMPLE_DEVICE_NAME "ESP_SPP_ACCEPTOR"
+
+#define CONNECTED_LED_GPIO CONFIG_CONNECTED_LED_GPIO
 
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_VFS;
 
@@ -52,6 +56,7 @@ static void spp_read_handle(void * param)
 {
     int size = 0;
     int fd = (int)param;
+    gpio_set_level(CONNECTED_LED_GPIO, 1);
     do {
         size = read (fd, spp_data, SPP_DATA_LEN);
         ESP_LOGI(SPP_TAG, "fd = %d data_len = %d", fd, size);
@@ -64,6 +69,7 @@ static void spp_read_handle(void * param)
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     } while (1);
+    gpio_set_level(CONNECTED_LED_GPIO, 0);
     spp_wr_task_shut_down();
 }
 
@@ -157,6 +163,11 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 
 void app_main()
 {
+    /* Configure GPIO mux */
+    gpio_pad_select_gpio(CONNECTED_LED_GPIO);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(CONNECTED_LED_GPIO, GPIO_MODE_OUTPUT);
+
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());

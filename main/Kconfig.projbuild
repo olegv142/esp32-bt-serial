@@ -1,0 +1,10 @@
+menu "Custom Configuration"
+
+config CONNECTED_LED_GPIO
+    int "Connected GPIO number"
+	range 0 34
+	default 5
+	help
+		GPIO number (IOxx) for connected status indication.
+
+endmenu
