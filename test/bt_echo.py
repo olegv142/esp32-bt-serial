@@ -23,7 +23,7 @@ def find_address(dev_name):
 			return addr
 	return None
 
-def receive(sock, size, tout = 1.):
+def receive(sock, size, tout = 5.):
 	buf, sz = '', size
 	deadline = None
 	while sz > 0:
