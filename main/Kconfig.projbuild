@@ -1,4 +1,4 @@
-menu "Custom Configuration"
+menu "BT-UART Bridge Configuration"
 
 config CONNECTED_LED_GPIO
     int "Connected indicator GPIO number"
@@ -29,6 +29,7 @@ config UART_RTS_GPIO
 		GPIO number (IOxx) for serial data RTS output. Low level enables data reception from RX line.
 
 config UART_CTS_GPIO
+    depends on UART_CTS_EN
     int "UART CTS GPIO number"
 	range 0 34
 	default 14
@@ -43,7 +44,7 @@ config UART_CTS_EN
 
 config UART_BITRATE
     int "UART baud rate"
-	range 9600 921600
+	range 9600 1843200
 	default 921600
 	help
 		UART data transfer rate in bits per second.
