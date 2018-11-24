@@ -16,9 +16,11 @@ The bridge has connection indicator output, serial data RX/TX lines and flow con
 
 # Power consumption
 
-35mA in idle state, 130mA while transferring data at maximum rate.
+35mA in idle state, 130mA while transferring data at maximum rate. A little high but you have got high data rate and excellent range.
 
+# Range
 
+Exceptional. Several timer better than with anything based on the Bluecore chips. I've got stable connection with 10 meters distance and 2 concrete walls in between.
 
 
 
