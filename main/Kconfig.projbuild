@@ -1,10 +1,44 @@
 menu "Custom Configuration"
 
 config CONNECTED_LED_GPIO
-    int "Connected GPIO number"
+    int "Connected indicator GPIO number"
 	range 0 34
 	default 5
 	help
 		GPIO number (IOxx) for connected status indication.
+
+config UART_TX_GPIO
+    int "UART TX GPIO number"
+	range 0 34
+	default 25
+	help
+		GPIO number (IOxx) for serial data TX output.
+
+config UART_RX_GPIO
+    int "UART RX GPIO number"
+	range 0 34
+	default 26
+	help
+		GPIO number (IOxx) for serial data RX input.
+
+config UART_RTS_GPIO
+    int "UART RTS GPIO number"
+	range 0 34
+	default 27
+	help
+		GPIO number (IOxx) for serial data RTS output. Low level enables data reception from the host.
+
+config UART_BITRATE
+    int "UART baud rate"
+	range 9600 921600
+	default 921600
+	help
+		UART data transfer rate in bits per second.
+
+config DEV_NAME_PREFIX
+    string "Bluetooth device name prefix"
+	default "EnSpectr-"
+	help
+		The fixed part of the bluetooth device name. It will be followed by serial number based on the MAC address.
 
 endmenu

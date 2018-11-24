@@ -22,6 +22,7 @@
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/uart.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_bt_main.h"
@@ -40,37 +41,103 @@
 
 #define SPP_TAG "SPP_ACCEPTOR_DEMO"
 #define SPP_SERVER_NAME "SPP_SERVER"
-#define EXCAMPLE_DEVICE_NAME "ESP_SPP_ACCEPTOR"
 
-#define CONNECTED_LED_GPIO CONFIG_CONNECTED_LED_GPIO
+#define BT_DEV_NAME_PREFIX CONFIG_DEV_NAME_PREFIX
+#define BT_DEV_NAME_PREFIX_LEN (sizeof(BT_DEV_NAME_PREFIX) - 1)
+
+#define BT_CONNECTED_GPIO  CONFIG_CONNECTED_LED_GPIO
+#define BT_UART_TX_GPIO    CONFIG_UART_TX_GPIO
+#define BT_UART_RX_GPIO    CONFIG_UART_RX_GPIO
+#define BT_UART_RTS_GPIO   CONFIG_UART_RTS_GPIO
+#define BT_UART_CTS_GPIO  (UART_PIN_NO_CHANGE)
+
+#define BT_UART_BITRATE    CONFIG_UART_BITRATE
+#define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_RTS
+
+// UART is transmitting data received via slow BT link so small buffer is enough
+#define BT_UART_TX_BUF_SZ (1024)
+// Allocate receive buffer able to keep the maximum transfer size from the peer
+#define BT_UART_RX_BUF_SZ (17*1024)
 
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_VFS;
 
 static const esp_spp_sec_t sec_mask = ESP_SPP_SEC_AUTHENTICATE;
 static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
 
-#define SPP_DATA_LEN 100
-static uint8_t spp_data[SPP_DATA_LEN];
+#define SPP_BUFF_SZ 128
+static uint8_t spp_buff[SPP_BUFF_SZ];
 
 static void spp_read_handle(void * param)
 {
     int size = 0;
     int fd = (int)param;
-    gpio_set_level(CONNECTED_LED_GPIO, 1);
-    do {
-        size = read (fd, spp_data, SPP_DATA_LEN);
-        ESP_LOGI(SPP_TAG, "fd = %d data_len = %d", fd, size);
-        if (size == -1) {
-            break;
+
+    ESP_LOGI(SPP_TAG, "BT connected");
+    gpio_set_level(BT_CONNECTED_GPIO, 1);
+
+    for (;;) {
+        // Read BT first
+        size = read(fd, spp_buff, SPP_BUFF_SZ);
+        if (size < 0) {
+            goto disconnected;
         }
-        esp_log_buffer_hex(SPP_TAG, spp_data, size);
-        if (size == 0) {
-            /*read fail due to there is no data, retry after 1s*/
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        if (size > 0) {
+            ESP_LOGI(SPP_TAG, "BT -> %d bytes -> UART", size);
+            uart_write_bytes(UART_NUM_1, (const char *)spp_buff, size);
+            continue;
         }
-    } while (1);
-    gpio_set_level(CONNECTED_LED_GPIO, 0);
+        // No data from BT, try read UART
+        size = uart_read_bytes(UART_NUM_1, spp_buff, SPP_BUFF_SZ, 1);
+        if (size <= 0) {
+            continue;
+        }
+        ESP_LOGI(SPP_TAG, "UART -> %d bytes", size);
+        uint8_t* ptr = spp_buff;
+        while (size > 0)
+        {
+            int res = write(fd, ptr, size);
+            if (res < 0) {
+                goto disconnected;
+            }
+            if (res == 0) {
+                vTaskDelay(1);
+                continue;
+            }
+            ESP_LOGI(SPP_TAG, "BT <- %d bytes", res);
+            size -= res;
+            ptr  += res;
+        }
+    }
+
+disconnected:
+    ESP_LOGI(SPP_TAG, "BT disconnected");
+    gpio_set_level(BT_CONNECTED_GPIO, 0);
     spp_wr_task_shut_down();
+}
+
+static inline char hex_digit(uint8_t v)
+{
+    return v < 10 ? '0' + v : 'A' + v - 10;
+}
+
+static inline char byte_signature(uint8_t v)
+{
+    return hex_digit((v & 0xf) ^ (v >> 4));
+}
+
+#define BT_MAC_LEN 6
+
+static void bt_set_device_name(void)
+{
+    char dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX;
+    const uint8_t * mac = esp_bt_dev_get_address();
+    int i;
+    for (i = 0; i < BT_MAC_LEN; ++i) {
+        dev_name[BT_DEV_NAME_PREFIX_LEN + i] = byte_signature(mac[i]);
+    }
+    dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN] = 0;
+    ESP_ERROR_CHECK(esp_bt_dev_set_device_name(dev_name));
+    ESP_LOGI(SPP_TAG, "Device name is %s", dev_name);
 }
 
 static void esp_spp_cb(uint16_t e, void *p)
@@ -81,7 +148,7 @@ static void esp_spp_cb(uint16_t e, void *p)
     switch (event) {
     case ESP_SPP_INIT_EVT:
         ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
-        esp_bt_dev_set_device_name(EXCAMPLE_DEVICE_NAME);
+        bt_set_device_name();
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
         esp_spp_start_srv(sec_mask,role_slave, 0, SPP_SERVER_NAME);
         break;
@@ -164,9 +231,23 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 void app_main()
 {
     /* Configure GPIO mux */
-    gpio_pad_select_gpio(CONNECTED_LED_GPIO);
+    gpio_pad_select_gpio(BT_CONNECTED_GPIO);
     /* Set the GPIO as a push/pull output */
-    gpio_set_direction(CONNECTED_LED_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(BT_CONNECTED_GPIO, GPIO_MODE_OUTPUT);
+
+    /* Configure UART */
+    uart_config_t uart_config = {
+        .baud_rate = BT_UART_BITRATE,
+        .data_bits = UART_DATA_8_BITS,
+        .parity    = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = BT_UART_FLOWCTRL,
+        .rx_flow_ctrl_thresh = UART_FIFO_LEN - 4
+    };
+
+    ESP_ERROR_CHECK(uart_param_config(UART_NUM_1, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(UART_NUM_1, BT_UART_TX_GPIO, BT_UART_RX_GPIO, BT_UART_RTS_GPIO, BT_UART_CTS_GPIO));
+    ESP_ERROR_CHECK(uart_driver_install(UART_NUM_1, BT_UART_RX_BUF_SZ, BT_UART_TX_BUF_SZ, 0, NULL, 0));
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
