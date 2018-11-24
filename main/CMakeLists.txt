@@ -1,4 +1,4 @@
-set(COMPONENT_SRCS "example_spp_vfs_acceptor_demo.c"
+set(COMPONENT_SRCS "spp_vfs_acceptor.c"
                    "spp_task.c")
 set(COMPONENT_ADD_INCLUDEDIRS ".")
 
