@@ -49,12 +49,19 @@ config UART_BITRATE
 	help
 		UART data transfer rate in bits per second.
 
-config UART_BUFF_SIZE
-    int "UART buffer size (KB)"
-	range 1 32
+config UART_TX_BUFF_SIZE
+    int "UART transmit buffer size (KB)"
+	range 0 64
 	default 17
 	help
-		UART data buffer size in kilobytes.
+		UART transmit data buffer size in kilobytes.
+
+config UART_RX_BUFF_SIZE
+    int "UART receive buffer size (KB)"
+	range 1 64
+	default 17
+	help
+		UART receive data buffer size in kilobytes.
 
 config DEV_NAME_PREFIX
     string "Bluetooth device name prefix"
