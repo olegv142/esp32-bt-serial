@@ -60,8 +60,8 @@
 #define BT_UART_CTS_GPIO   UART_PIN_NO_CHANGE
 #endif
 
-#define BT_UART_RX_BUF_SZ (1024 * CONFIG_UART_BUFF_SIZE)
-#define BT_UART_TX_BUF_SZ BT_UART_RX_BUF_SZ
+#define BT_UART_RX_BUF_SZ (1024 * CONFIG_UART_RX_BUFF_SIZE)
+#define BT_UART_TX_BUF_SZ (1024 * CONFIG_UART_TX_BUFF_SIZE)
 
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_VFS;
 
@@ -71,6 +71,32 @@ static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
 #define SPP_BUFF_SZ 128
 static uint8_t spp_buff[SPP_BUFF_SZ];
 
+static int uart_to_bt(int bt_fd, TickType_t ticks_to_wait)
+{
+    int size = uart_read_bytes(UART_NUM_1, spp_buff, SPP_BUFF_SZ, ticks_to_wait);
+    if (size <= 0) {
+        return 0;
+    }
+    ESP_LOGI(SPP_TAG, "UART -> %d bytes", size);
+    uint8_t* ptr = spp_buff;
+    int remain = size;
+    while (remain > 0)
+    {
+        int res = write(bt_fd, ptr, remain);
+        if (res < 0) {
+            return -1;
+        }
+        if (res == 0) {
+            vTaskDelay(1);
+            continue;
+        }
+        ESP_LOGI(SPP_TAG, "BT <- %d bytes", res);
+        remain -= res;
+        ptr  += res;
+    }
+    return size;
+}
+
 static void spp_read_handle(void * param)
 {
     int fd = (int)param;
@@ -79,8 +105,18 @@ static void spp_read_handle(void * param)
     gpio_set_level(BT_CONNECTED_GPIO, 1);
     uart_flush(UART_NUM_1);
 
-    for (;;) {
-        // Read BT first
+    for (;;)
+    {
+        size_t avail_size = 0;
+        uart_get_buffered_data_len(UART_NUM_1, &avail_size);
+        if (avail_size) {
+            // Send available data from UART to BT first
+            if (uart_to_bt(fd, 0) < 0)
+                goto disconnected;
+            continue;
+        }
+
+        // Try receive data from BT
         int size = read(fd, spp_buff, SPP_BUFF_SZ);
         if (size < 0) {
             goto disconnected;
@@ -90,27 +126,10 @@ static void spp_read_handle(void * param)
             uart_write_bytes(UART_NUM_1, (const char *)spp_buff, size);
             continue;
         }
-        // No data from BT, try read UART
-        size = uart_read_bytes(UART_NUM_1, spp_buff, SPP_BUFF_SZ, 1);
-        if (size <= 0) {
-            continue;
-        }
-        ESP_LOGI(SPP_TAG, "UART -> %d bytes", size);
-        uint8_t* ptr = spp_buff;
-        while (size > 0)
-        {
-            int res = write(fd, ptr, size);
-            if (res < 0) {
-                goto disconnected;
-            }
-            if (res == 0) {
-                vTaskDelay(1);
-                continue;
-            }
-            ESP_LOGI(SPP_TAG, "BT <- %d bytes", res);
-            size -= res;
-            ptr  += res;
-        }
+
+        // Read UART waiting 1 tick for the new data
+        if (uart_to_bt(fd, 1) < 0)
+            goto disconnected;
     }
 
 disconnected:
