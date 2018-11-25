@@ -16,7 +16,7 @@ The bridge has connection indicator output, serial data RX/TX lines and flow con
 
 # Power consumption
 
-35mA in idle state, 130mA while transferring data at maximum rate. A little high but you have got high data rate and excellent range.
+35mA in idle state, 130mA while transferring data at maximum rate. A little more than average but you have got high data rate and excellent range.
 
 # Range
 
