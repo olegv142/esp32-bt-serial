@@ -26,7 +26,7 @@ Just issue *make* command in the project directory
 
 Unless you have dev kit with USB programmer included you will need some minimal wiring made to the ESP32 module to be able to flash it. The following figure shows an example of such setup with programming connections shown in blue. The connections providing serial interface to the your system are shown in black.
 ![ESP32 module wiring](https://github.com/olegv142/esp32-bt-serial/blob/master/doc/wiring.png)
-You can use virtually any USB-serial bridge capable of working at 115200 baud. The IO0 pin shoud be connected to the ground while powering up the module in order to turn it onto serial programming mode. After that you can issue *make flash* command in the project directory and wait for the programming completion. Then turn off power, disconnect programming circuit and enjoy using your brand new bluetooth serial bridge.
+You can use virtually any USB-serial bridge capable of working at 115200 baud. The IO0 pin shoud be connected to the ground while powering up the module in order to turn it onto serial programming mode. After that you can issue *make flash* command in the project directory and wait for the flashing completion. Then turn off power, disconnect programming circuit and enjoy using your brand new bluetooth serial bridge.
 
 ## Connections
 
