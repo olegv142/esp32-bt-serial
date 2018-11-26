@@ -271,7 +271,6 @@ void app_main()
         .parity    = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
         .flow_ctrl = BT_UART_FLOWCTRL,
-        .rx_flow_ctrl_thresh = UART_FIFO_LEN - 4
     };
 
     ESP_ERROR_CHECK(uart_param_config(UART_NUM_1, &uart_config));
