@@ -107,15 +107,20 @@ static void spp_read_handle(void * param)
 
     for (;;)
     {
-        size_t avail_size = 0;
-        uart_get_buffered_data_len(UART_NUM_1, &avail_size);
-        if (avail_size) {
+        size_t avail_now = 0;
+        uart_get_buffered_data_len(UART_NUM_1, &avail_now);
+        if (avail_now) {
             // Send available data from UART to BT first
-            if (uart_to_bt(fd, 0) < 0)
-                goto disconnected;
-            continue;
+            int remain = avail_now;
+            while (remain > 0) {
+                int tx_size = uart_to_bt(fd, 0);
+                if (tx_size < 0)
+                    goto disconnected;
+                if (!tx_size)
+                    break;
+                remain -= tx_size;
+            }
         }
-
         // Try receive data from BT
         int size = read(fd, spp_buff, SPP_BUFF_SZ);
         if (size < 0) {
@@ -126,10 +131,11 @@ static void spp_read_handle(void * param)
             uart_write_bytes(UART_NUM_1, (const char *)spp_buff, size);
             continue;
         }
-
-        // Read UART waiting 1 tick for the new data
-        if (uart_to_bt(fd, 1) < 0)
-            goto disconnected;
+        if (!avail_now) {
+            // Read UART waiting 1 tick for the new data
+            if (uart_to_bt(fd, 1) < 0)
+                goto disconnected;
+        }
     }
 
 disconnected:
