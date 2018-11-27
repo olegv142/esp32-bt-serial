@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := bt_spp_vfs_acceptor_demo
+PROJECT_NAME := bt_spp_serial_bridge
 
 COMPONENT_ADD_INCLUDEDIRS := components/include
 
