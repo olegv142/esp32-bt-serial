@@ -68,7 +68,7 @@ static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_VFS;
 static const esp_spp_sec_t sec_mask = ESP_SPP_SEC_AUTHENTICATE;
 static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
 
-#define SPP_BUFF_SZ 512
+#define SPP_BUFF_SZ 128
 static uint8_t spp_buff[SPP_BUFF_SZ];
 
 static int uart_to_bt(int bt_fd, TickType_t ticks_to_wait)
@@ -97,6 +97,8 @@ static int uart_to_bt(int bt_fd, TickType_t ticks_to_wait)
     return size;
 }
 
+#define SPP_BULK_RD_THRESHOLD 512
+
 static void spp_read_handle(void * param)
 {
     int fd = (int)param;
@@ -109,15 +111,17 @@ static void spp_read_handle(void * param)
     {
         size_t avail_now = 0;
         uart_get_buffered_data_len(UART_NUM_1, &avail_now);
-        // Send available data from UART to BT first
-        int remain = avail_now;
-        while (remain >= SPP_BUFF_SZ) {
-            int tx_size = uart_to_bt(fd, 0);
-            if (tx_size < 0)
-                goto disconnected;
-            if (!tx_size)
-                break;
-            remain -= tx_size;
+        if (avail_now >= SPP_BULK_RD_THRESHOLD) {
+            // Send available data from UART to BT first
+            int remain = avail_now;
+            while (remain >= SPP_BUFF_SZ) {
+                int tx_size = uart_to_bt(fd, 0);
+                if (tx_size < 0)
+                    goto disconnected;
+                if (!tx_size)
+                    break;
+                remain -= tx_size;
+            }
         }
         // Try receive data from BT
         int size = read(fd, spp_buff, SPP_BUFF_SZ);
@@ -129,7 +133,7 @@ static void spp_read_handle(void * param)
             uart_write_bytes(UART_NUM_1, (const char *)spp_buff, size);
             continue;
         }
-        if (avail_now < SPP_BUFF_SZ) {
+        if (avail_now < SPP_BULK_RD_THRESHOLD) {
             // Read UART waiting 1 tick for the new data
             if (uart_to_bt(fd, 1) < 0)
                 goto disconnected;
