@@ -34,7 +34,7 @@ The ESP32 module is using the same serial channel used for programming to print 
 
 ## Power consumption
 
-35mA in idle state, 130mA while transferring data at maximum rate. A little more than average but you have got high data rate and excellent range.
+35mA in idle state, 110mA while transferring data at maximum rate. A little more than average but you have got high data rate and excellent range.
 
 ## Range
 
