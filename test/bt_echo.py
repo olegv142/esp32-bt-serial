@@ -24,7 +24,7 @@ def find_address(dev_name):
 	return None
 
 def receive(sock, size, tout = 5.):
-	buf, sz = '', size
+	chunks, sz = [], size
 	deadline = None
 	while sz > 0:
 		data = sock.recv(sz)
@@ -34,13 +34,13 @@ def receive(sock, size, tout = 5.):
 			elif time.time() > deadline:
 				raise RuntimeError('receive timeout')
 			continue			
-		chunk = len(data)
-		if chunk == size:
+		chunk_sz = len(data)
+		if chunk_sz == size:
 			return data
 		deadline = None
-		buf += data
-		sz -= chunk
-	return buf
+		chunks.append(data)
+		sz -= chunk_sz
+	return ''.join(chunks)
 
 def do_test(addr):
 	sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
