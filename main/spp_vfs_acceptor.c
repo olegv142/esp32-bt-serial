@@ -134,8 +134,8 @@ static void spp_read_handle(void * param)
             continue;
         }
         if (avail_now < SPP_BULK_RD_THRESHOLD) {
-            // Read UART waiting 1 tick for the new data
-            if (uart_to_bt(fd, 1) < 0)
+            // Read UART waiting several ticks for the new data
+            if (uart_to_bt(fd, avail_now ? 1 : 2) < 0)
                 goto disconnected;
         }
     }
