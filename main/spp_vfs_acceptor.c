@@ -50,6 +50,9 @@
 #define BT_UART_RX_GPIO    CONFIG_UART_RX_GPIO
 #define BT_UART_RTS_GPIO   CONFIG_UART_RTS_GPIO
 
+#define BT_LED_CONNECTED    0
+#define BT_LED_DISCONNECTED 1
+
 #define BT_UART_BITRATE    CONFIG_UART_BITRATE
 
 #ifdef CONFIG_UART_CTS_EN
@@ -104,7 +107,7 @@ static void spp_read_handle(void * param)
     int fd = (int)param;
 
     ESP_LOGI(SPP_TAG, "BT connected");
-    gpio_set_level(BT_CONNECTED_GPIO, 1);
+    gpio_set_level(BT_CONNECTED_GPIO, BT_LED_CONNECTED);
     uart_flush(UART_NUM_1);
 
     for (;;)
@@ -142,7 +145,7 @@ static void spp_read_handle(void * param)
 
 disconnected:
     ESP_LOGI(SPP_TAG, "BT disconnected");
-    gpio_set_level(BT_CONNECTED_GPIO, 0);
+    gpio_set_level(BT_CONNECTED_GPIO, BT_LED_DISCONNECTED);
     spp_wr_task_shut_down();
 }
 
@@ -263,6 +266,7 @@ void app_main()
 {
     /* Configure GPIO mux */
     gpio_pad_select_gpio(BT_CONNECTED_GPIO);
+    gpio_set_level(BT_CONNECTED_GPIO, BT_LED_DISCONNECTED);
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(BT_CONNECTED_GPIO, GPIO_MODE_OUTPUT);
 
