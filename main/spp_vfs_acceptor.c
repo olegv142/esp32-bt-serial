@@ -267,8 +267,8 @@ void app_main()
     /* Configure GPIO mux */
     gpio_pad_select_gpio(BT_CONNECTED_GPIO);
     gpio_set_level(BT_CONNECTED_GPIO, BT_LED_DISCONNECTED);
-    /* Set the GPIO as a push/pull output */
-    gpio_set_direction(BT_CONNECTED_GPIO, GPIO_MODE_OUTPUT);
+    /* Set the GPIO as output with open drain */
+    gpio_set_direction(BT_CONNECTED_GPIO, GPIO_MODE_OUTPUT_OD);
 
     /* Configure UART */
     uart_config_t uart_config = {
