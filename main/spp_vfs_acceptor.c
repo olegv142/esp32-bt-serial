@@ -23,7 +23,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/uart.h"
-#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_bt_main.h"
@@ -174,10 +173,6 @@ static void bt_set_device_name(void)
     ESP_ERROR_CHECK(esp_bt_dev_set_device_name(dev_name));
     ESP_LOGI(SPP_TAG, "Device name is %s", dev_name);
 }
-
-#ifndef ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE
-#define ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE
-#endif
 
 static void esp_spp_cb(uint16_t e, void *p)
 {
