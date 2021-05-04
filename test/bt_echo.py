@@ -32,7 +32,7 @@ def receive(sock, size, tout = 5.):
 			if deadline is None:
 				deadline = time.time() + tout
 			elif time.time() > deadline:
-				raise RuntimeError('receive timeout')
+				raise RuntimeError('receive timeout, %u out of %u bytes received' % (size - sz, size))
 			continue			
 		chunk_sz = len(data)
 		if chunk_sz == size:
