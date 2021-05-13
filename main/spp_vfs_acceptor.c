@@ -23,6 +23,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/uart.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_bt_main.h"
@@ -183,7 +184,7 @@ static void esp_spp_cb(uint16_t e, void *p)
     case ESP_SPP_INIT_EVT:
         ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
         bt_set_device_name();
-        esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+        esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
         esp_spp_start_srv(sec_mask,role_slave, 0, SPP_SERVER_NAME);
         break;
     case ESP_SPP_DISCOVERY_COMP_EVT:
