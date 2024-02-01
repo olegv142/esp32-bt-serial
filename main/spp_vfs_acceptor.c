@@ -304,8 +304,8 @@ void app_main()
     alt_settings = !gpio_get_level(BT_ALT_SWITCH_GPIO);
     if (alt_settings) {
         gpio_pad_select_gpio(BT_ALT_INDICATOR_GPIO);
-        gpio_set_direction(BT_ALT_INDICATOR_GPIO, GPIO_MODE_OUTPUT);
         gpio_set_level(BT_ALT_INDICATOR_GPIO, 1);
+        gpio_set_direction(BT_ALT_INDICATOR_GPIO, GPIO_MODE_OUTPUT);
     }
 
     /* Configure UART */
