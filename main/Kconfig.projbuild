@@ -89,4 +89,11 @@ config ALT_SWITCH_GPIO
 	help
 		GPIO number (IOxx) for alternative mode switch. Pulled low it will engage alternative settings for device name and baud rate.
 
+config ALT_INDICATOR_GPIO
+    int "UART alternative mode indicator GPIO number"
+	range 0 34
+	default 32
+	help
+		GPIO number (IOxx) for alternative mode indicator. Its pulled high while in alternative mode or kept in high impedance state otherwise.
+
 endmenu

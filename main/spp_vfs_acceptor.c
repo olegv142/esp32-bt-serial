@@ -59,7 +59,8 @@
 #define BT_UART_BITRATE     CONFIG_UART_BITRATE
 #define BT_UART_BITRATE_ALT CONFIG_UART_BITRATE_ALT
 
-#define BT_ALT_SWITCH_GPIO CONFIG_ALT_SWITCH_GPIO
+#define BT_ALT_SWITCH_GPIO    CONFIG_ALT_SWITCH_GPIO
+#define BT_ALT_INDICATOR_GPIO CONFIG_ALT_INDICATOR_GPIO
 
 #ifdef CONFIG_UART_CTS_EN
 #define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_CTS_RTS
@@ -300,6 +301,11 @@ void app_main()
     gpio_set_level(BT_CONNECTED_GPIO, BT_LED_DISCONNECTED);
 
     alt_settings = !gpio_get_level(BT_ALT_SWITCH_GPIO);
+    if (alt_settings) {
+        gpio_pad_select_gpio(BT_ALT_INDICATOR_GPIO);
+        gpio_set_direction(BT_ALT_INDICATOR_GPIO, GPIO_MODE_OUTPUT);
+        gpio_set_level(BT_ALT_INDICATOR_GPIO, 1);
+    }
 
     /* Configure UART */
     uart_config_t uart_config = {
