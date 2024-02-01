@@ -30,7 +30,7 @@ You can use hardware flow control CTS/RTS lines or ignore them depending on your
 
 ## Alternative settings
 
-Pulling IO4 low while powering on activate alternative settings for baud rate and device name. It may be handy in case you need separate setting for flashing firmware for example. Note that in alternative mode hardware flow control is not used. Leave IO4 floating if alternative setting are not needed.
+Pulling IO4 low while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate setting for flashing firmware for example. Note that in alternative mode hardware flow control is not used. Leave IO4 floating if alternative setting are not needed.
 
 ## Troubleshooting
 
