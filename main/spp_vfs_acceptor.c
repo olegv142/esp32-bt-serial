@@ -71,6 +71,7 @@
 #endif
 
 #define BT_UART_FLOWCTRL_ALT UART_HW_FLOWCTRL_DISABLE
+#define BT_UART_PARITY_ALT   UART_PARITY_EVEN
 
 #define BT_UART_RX_BUF_SZ (1024 * CONFIG_UART_RX_BUFF_SIZE)
 #define BT_UART_TX_BUF_SZ (1024 * CONFIG_UART_TX_BUFF_SIZE)
@@ -311,7 +312,7 @@ void app_main()
     uart_config_t uart_config = {
         .baud_rate = alt_settings ? BT_UART_BITRATE_ALT : BT_UART_BITRATE,
         .data_bits = UART_DATA_8_BITS,
-        .parity    = UART_PARITY_DISABLE,
+        .parity    = alt_settings ? BT_UART_PARITY_ALT : UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
         .flow_ctrl = alt_settings ? BT_UART_FLOWCTRL_ALT : BT_UART_FLOWCTRL,
         .rx_flow_ctrl_thresh = UART_FIFO_LEN - 4
