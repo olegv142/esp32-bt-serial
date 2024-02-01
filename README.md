@@ -28,6 +28,10 @@ You can use virtually any USB-serial bridge capable of working at 115200 baud. T
 
 You can use hardware flow control CTS/RTS lines or ignore them depending on your system design details. Basically not using RTS line is safe if packets you are sending to the module's RXD line are not exceeding 128 bytes. The CTS line usage is completely up to your implementation of the serial data receiver. If you are not going to use CTS line you should either connect it to the ground or disable at firmware build stage by means of *make menuconfig*. The EN line plays the role of the reset to the module. Low level on this line turns the module onto the reset state with low power consumption. In case you are not going to use this line it should be pulled up. The pull up resistors on the TXD and RTS lines are needed to prevent them from floating during module boot.
 
+## Alternative settings
+
+Pulling IO4 low while powering on activate alternative settings for baud rate and device name. It may be handy in case you need separate setting for flashing firmware for example. Note that in alternative mode hardware flow control is not used. Leave IO4 floating if alternative setting are not needed.
+
 ## Troubleshooting
 
 The ESP32 module is using the same serial channel used for programming to print error and debug messages. So if anything goes wrong you can attach the programming circuit without grounding the IO0 pin and monitor debug messages during module boot.
@@ -40,5 +44,7 @@ The ESP32 module is using the same serial channel used for programming to print 
 
 Exceptional. Several timer better than with anything based on the Bluecore chips. I've got stable connection with 10 meters distance and 2 concrete walls in between.
 
+## Framework version
 
+The code was built with esp-idf heading at commit 0d7f2d77c2eee51dce3fa7c8430a641c65cd9719 from Nov 21 2018. An attempt to port the code to newer version of esp-idf was made but showed almost two times degradation in Bluetooth throughput. So I opted for performance and keep code based on old version. If you prefer newer framework then just reapply commit 83145d72aad7467f8c3de8156d321d2c8734e4b0 fixing compilation with new SDK.
 
