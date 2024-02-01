@@ -49,6 +49,13 @@ config UART_BITRATE
 	help
 		UART data transfer rate in bits per second.
 
+config UART_BITRATE_ALT
+    int "UART alternative baud rate"
+	range 9600 1843200
+	default 19200
+	help
+		UART alternative mode data transfer rate in bits per second.
+
 config UART_TX_BUFF_SIZE
     int "UART transmit buffer size (KB)"
 	range 0 64
@@ -68,5 +75,18 @@ config DEV_NAME_PREFIX
 	default "EnSpectr-"
 	help
 		The fixed part of the bluetooth device name. It will be followed by serial number based on the MAC address.
+
+config DEV_NAME_PREFIX_ALT
+    string "Bluetooth alternative device name prefix"
+	default "EnSpectrX-"
+	help
+		The fixed part of the alternative bluetooth device name. It will be followed by serial number based on the MAC address.
+
+config ALT_SWITCH_GPIO
+    int "UART alternative mode switch GPIO number"
+	range 0 34
+	default 4
+	help
+		GPIO number (IOxx) for alternative mode switch. Pulled low it will engage alternative settings for device name and baud rate.
 
 endmenu

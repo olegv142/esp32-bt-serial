@@ -45,6 +45,9 @@
 #define BT_DEV_NAME_PREFIX CONFIG_DEV_NAME_PREFIX
 #define BT_DEV_NAME_PREFIX_LEN (sizeof(BT_DEV_NAME_PREFIX) - 1)
 
+#define BT_DEV_NAME_PREFIX_ALT CONFIG_DEV_NAME_PREFIX_ALT
+#define BT_DEV_NAME_PREFIX_LEN_ALT (sizeof(BT_DEV_NAME_PREFIX_ALT) - 1)
+
 #define BT_CONNECTED_GPIO  CONFIG_CONNECTED_LED_GPIO
 #define BT_UART_TX_GPIO    CONFIG_UART_TX_GPIO
 #define BT_UART_RX_GPIO    CONFIG_UART_RX_GPIO
@@ -53,7 +56,10 @@
 #define BT_LED_CONNECTED    0
 #define BT_LED_DISCONNECTED 1
 
-#define BT_UART_BITRATE    CONFIG_UART_BITRATE
+#define BT_UART_BITRATE     CONFIG_UART_BITRATE
+#define BT_UART_BITRATE_ALT CONFIG_UART_BITRATE_ALT
+
+#define BT_ALT_SWITCH_GPIO CONFIG_ALT_SWITCH_GPIO
 
 #ifdef CONFIG_UART_CTS_EN
 #define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_CTS_RTS
@@ -62,6 +68,8 @@
 #define BT_UART_FLOWCTRL   UART_HW_FLOWCTRL_RTS
 #define BT_UART_CTS_GPIO   UART_PIN_NO_CHANGE
 #endif
+
+#define BT_UART_FLOWCTRL_ALT UART_HW_FLOWCTRL_DISABLE
 
 #define BT_UART_RX_BUF_SZ (1024 * CONFIG_UART_RX_BUFF_SIZE)
 #define BT_UART_TX_BUF_SZ (1024 * CONFIG_UART_TX_BUFF_SIZE)
@@ -73,6 +81,8 @@ static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
 
 #define SPP_BUFF_SZ 128
 static uint8_t spp_buff[SPP_BUFF_SZ];
+
+static bool alt_settings;
 
 static int uart_to_bt(int bt_fd, TickType_t ticks_to_wait)
 {
@@ -174,6 +184,19 @@ static void bt_set_device_name(void)
     ESP_LOGI(SPP_TAG, "Device name is %s", dev_name);
 }
 
+static void bt_set_alt_device_name(void)
+{
+    char dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX_ALT;
+    const uint8_t * mac = esp_bt_dev_get_address();
+    int i;
+    for (i = 0; i < BT_MAC_LEN; ++i) {
+        dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + i] = byte_signature(mac[i]);
+    }
+    dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN] = 0;
+    ESP_ERROR_CHECK(esp_bt_dev_set_device_name(dev_name));
+    ESP_LOGI(SPP_TAG, "Device name (alt) is %s", dev_name);
+}
+
 static void esp_spp_cb(uint16_t e, void *p)
 {
     esp_spp_cb_event_t event = e;
@@ -182,7 +205,10 @@ static void esp_spp_cb(uint16_t e, void *p)
     switch (event) {
     case ESP_SPP_INIT_EVT:
         ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
-        bt_set_device_name();
+		if (alt_settings)
+			bt_set_alt_device_name();
+		else
+			bt_set_device_name();
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
         esp_spp_start_srv(sec_mask,role_slave, 0, SPP_SERVER_NAME);
         break;
@@ -265,18 +291,23 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 void app_main()
 {
     /* Configure GPIO mux */
+    gpio_pad_select_gpio(BT_ALT_SWITCH_GPIO);
+    gpio_set_direction(BT_ALT_SWITCH_GPIO, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(BT_ALT_SWITCH_GPIO, GPIO_PULLUP_ONLY);
+
     gpio_pad_select_gpio(BT_CONNECTED_GPIO);
-    gpio_set_level(BT_CONNECTED_GPIO, BT_LED_DISCONNECTED);
-    /* Set the GPIO as output with open drain */
     gpio_set_direction(BT_CONNECTED_GPIO, GPIO_MODE_OUTPUT_OD);
+    gpio_set_level(BT_CONNECTED_GPIO, BT_LED_DISCONNECTED);
+
+    alt_settings = !gpio_get_level(BT_ALT_SWITCH_GPIO);
 
     /* Configure UART */
     uart_config_t uart_config = {
-        .baud_rate = BT_UART_BITRATE,
+        .baud_rate = alt_settings ? BT_UART_BITRATE_ALT : BT_UART_BITRATE,
         .data_bits = UART_DATA_8_BITS,
         .parity    = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = BT_UART_FLOWCTRL,
+        .flow_ctrl = alt_settings ? BT_UART_FLOWCTRL_ALT : BT_UART_FLOWCTRL,
         .rx_flow_ctrl_thresh = UART_FIFO_LEN - 4
     };
 
