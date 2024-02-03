@@ -12,7 +12,7 @@ See https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html
 
 ## Configuring
 
-The bridge has connection indicator output, serial data RX/TX lines and flow control lines RTS/CTS, the last one is optional. All 5 pin locations can be configured by running *make menuconfig*. Besides one can configure UART baud rate, buffer size and bluetooth device name prefix. The full device name consists of the user defined prefix followed by 6 symbols derived from the device MAC address. Such scheme is convenient in case you have more than one device since it provides the way to distinguish them. The supported serial baud rates are in the range from 9600 to 1843200 with 921600 being the default since it matches the baud rate of the bluetooth channel itself. So further increasing baud rate has no practical sense.
+The bridge has connection indicator output, serial data RX/TX lines and flow control lines RTS/CTS, the last one is optional. All pin locations can be configured by running *make menuconfig*. Besides one can configure UART baud rate, buffer size and bluetooth device name prefix. The full device name consists of the user defined prefix followed by 6 symbols derived from the device MAC address. Such scheme is convenient in case you have more than one device since it provides the way to distinguish them. The supported serial baud rates are in the range from 9600 to 1843200 with 921600 being the default since it matches the baud rate of the bluetooth channel itself. So further increasing baud rate has no practical sense.
 
 ## Building
 
@@ -31,6 +31,8 @@ You can use hardware flow control CTS/RTS lines or ignore them depending on your
 ## Alternative settings
 
 Pulling IO4 low while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate settings for flashing firmware for example. Note that in alternative mode hardware flow control is not used. Leave IO4 floating if alternative setting are not required.
+
+While in alternative mode the IO32 output is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the other MCU that is normally driving EN input. If alt mode output is connected to EN input it will keep ESP32 module active while upgrading firmware of the controlling MCU.
 
 ## Troubleshooting
 
