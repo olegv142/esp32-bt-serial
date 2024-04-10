@@ -52,7 +52,7 @@ config UART_BITRATE
 config UART_BITRATE_ALT
     int "UART alternative baud rate"
 	range 9600 1843200
-	default 19200
+	default 115200
 	help
 		UART alternative mode data transfer rate in bits per second.
 
