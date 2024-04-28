@@ -6,6 +6,7 @@ import time
 max_msg_len = 17*1024
 max_msg_offset = 1024
 msg_buff = None
+idle_delay = .001
 
 def msg_init():
 	global msg_buff
@@ -33,7 +34,8 @@ def receive(sock, size, tout = 5.):
 				deadline = time.time() + tout
 			elif time.time() > deadline:
 				raise RuntimeError('receive timeout, %u out of %u bytes received' % (size - sz, size))
-			continue			
+			time.sleep(idle_delay)
+			continue		
 		chunk_sz = len(data)
 		if chunk_sz == size:
 			return data
@@ -41,6 +43,18 @@ def receive(sock, size, tout = 5.):
 		chunks.append(data)
 		sz -= chunk_sz
 	return ''.join(chunks)
+
+def chk_resp(msg, resp):
+	if msg == resp:
+		return True
+	print >> sys.stderr, 'bad response:'
+	cnt = 0
+	for i, sent in enumerate(msg):
+		if sent != resp[i]:
+			print >> sys.stderr, '[%u] sent %02x, recv %02x' % (i, ord(sent), ord(resp[i]))
+			cnt += 1
+	print >> sys.stderr, '%u of %u bytes mismatched' % (cnt, len(msg))
+	return False
 
 def do_test(addr):
 	sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
@@ -59,7 +73,8 @@ def do_test(addr):
 		msg_len = len(msg)
 		resp = receive(sock, msg_len)
 		assert len(resp) == msg_len
-		assert resp == msg
+		if not chk_resp(msg, resp):
+			break
 		bytes += msg_len
 		print >> sys.stderr, '.',
 		if bytes > 1000000:
