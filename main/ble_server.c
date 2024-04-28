@@ -58,7 +58,7 @@ static const uint16_t spp_service_uuid = 0xFFE0;
 #define BLE_ADV_NAME_OFF  15
 
 static uint8_t spp_adv_data[BLE_ADV_NAME_OFF+BLE_ADV_NAME_LEN+DEV_NAME_SUFF_LEN] = {
-    0x02, 0x01, 0x06,                   // flags
+    0x02, 0x01, 0x04,                   // flags
     0x03, 0x03, 0xe0, 0xff,             // service UID
     0x05, 0x12, 0x20, 0x00, 0x40, 0x00, // conn interval range
     1+BLE_ADV_NAME_LEN+DEV_NAME_SUFF_LEN, 0x09,
