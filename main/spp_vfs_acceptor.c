@@ -147,6 +147,7 @@ static void spp_read_handle(void * param)
         if (size > 0) {
             ESP_LOGD(SPP_TAG, "BT -> %d bytes -> UART", size);
             uart_write_bytes(BT_UART, (const char *)spp_buff, size);
+            ticks_to_wait = 0;
         } else
             ticks_to_wait = 1;
     }
