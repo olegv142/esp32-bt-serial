@@ -30,6 +30,7 @@
 #include "esp_bt_device.h"
 #include "esp_spp_api.h"
 #include "spp_task.h"
+#include "main.h"
 
 #include "time.h"
 #include "sys/time.h"
@@ -168,30 +169,28 @@ static inline char byte_signature(uint8_t v)
     return hex_digit((v & 0xf) ^ (v >> 4));
 }
 
-#define BT_MAC_LEN 6
+void get_device_name_suff(char buff[DEV_NAME_SUFF_LEN])
+{
+    const uint8_t * mac = esp_bt_dev_get_address();
+    for (int i = 0; i < DEV_NAME_SUFF_LEN; ++i) {
+        buff[i] = byte_signature(mac[i]);
+    }
+}
 
 static const char* bt_get_dev_name(void)
 {
-    static char dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX;
-    const uint8_t * mac = esp_bt_dev_get_address();
-    int i;
-    for (i = 0; i < BT_MAC_LEN; ++i) {
-        dev_name[BT_DEV_NAME_PREFIX_LEN + i] = byte_signature(mac[i]);
-    }
-    dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN] = 0;
+    static char dev_name[BT_DEV_NAME_PREFIX_LEN + DEV_NAME_SUFF_LEN + 1] = BT_DEV_NAME_PREFIX;
+    get_device_name_suff(&dev_name[BT_DEV_NAME_PREFIX_LEN]);
+    dev_name[BT_DEV_NAME_PREFIX_LEN + DEV_NAME_SUFF_LEN] = 0;
     ESP_LOGI(SPP_TAG, "Device name is %s", dev_name);
     return dev_name;
 }
 
 static const char* bt_get_alt_dev_name(void)
 {
-    static char dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX_ALT;
-    const uint8_t * mac = esp_bt_dev_get_address();
-    int i;
-    for (i = 0; i < BT_MAC_LEN; ++i) {
-        dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + i] = byte_signature(mac[i]);
-    }
-    dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN] = 0;
+    static char dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + DEV_NAME_SUFF_LEN + 1] = BT_DEV_NAME_PREFIX_ALT;
+    get_device_name_suff(&dev_name[BT_DEV_NAME_PREFIX_LEN_ALT]);
+    dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + DEV_NAME_SUFF_LEN] = 0;
     ESP_LOGI(SPP_TAG, "Device name (alt) is %s", dev_name);
     return dev_name;
 }

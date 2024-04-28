@@ -57,12 +57,12 @@ static const uint16_t spp_service_uuid = 0xFFE0;
 #define BLE_ADV_NAME_LEN (sizeof(BLE_ADV_NAME)-1)
 #define BLE_ADV_NAME_OFF  15
 
-static uint8_t spp_adv_data[BLE_ADV_NAME_OFF+BLE_ADV_NAME_LEN] = {
+static uint8_t spp_adv_data[BLE_ADV_NAME_OFF+BLE_ADV_NAME_LEN+DEV_NAME_SUFF_LEN] = {
     0x02, 0x01, 0x08,                   // flags
     0x03, 0x03, 0xe0, 0xff,             // service UID
     0x05, 0x12, 0x20, 0x00, 0x40, 0x00, // conn interval range
-    1+BLE_ADV_NAME_LEN, 0x09,
-    // [BLE_ADV_NAME_OFF..] BLE_ADV_NAME
+    1+BLE_ADV_NAME_LEN+DEV_NAME_SUFF_LEN, 0x09,
+    // [BLE_ADV_NAME_OFF..] BLE_ADV_NAME + suffix
 };
 
 #define BLE_UART_NUM    UART_NUM_2
@@ -370,6 +370,7 @@ void ble_server_init(void)
 {
     for (int i = 0; i < BLE_ADV_NAME_LEN; ++i)
         spp_adv_data[BLE_ADV_NAME_OFF+i] = BLE_ADV_NAME[i];
+    get_device_name_suff((char*)&spp_adv_data[BLE_ADV_NAME_OFF+BLE_ADV_NAME_LEN]);
 
     esp_ble_gatts_register_callback(gatts_event_handler);
     esp_ble_gap_register_callback(gap_event_handler);
