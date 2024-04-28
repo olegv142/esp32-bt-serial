@@ -78,7 +78,7 @@ config DEV_NAME_PREFIX
 
 config DEV_NAME_PREFIX_ALT
     string "Bluetooth alternative device name prefix"
-	default "EnSpectrX-"
+	default "EnSpectrPw-"
 	help
 		The fixed part of the alternative bluetooth device name. It will be followed by serial number based on the MAC address.
 
@@ -95,5 +95,41 @@ config ALT_INDICATOR_GPIO
 	default 32
 	help
 		GPIO number (IOxx) for alternative mode indicator. Its pulled high while in alternative mode or kept in high impedance state otherwise.
+
+config ALT_UART_PARITY
+    bool "UART use parity in alternative mode"
+	default y
+	help
+		Enable UART parity in alternative mode. If enabled the UART port uses even parity in alternative mode.
+
+config DEV_NAME_BLE
+    depends on BTDM_CONTROLLER_MODE_BTDM
+    string "Bluetooth LE device name"
+	default "EnSpectrPw"
+	help
+		The name of the bluetooth LE device. Its shown by web BLE applications only.
+
+config BLE_UART_RX_GPIO
+    depends on BTDM_CONTROLLER_MODE_BTDM
+    int "BLE UART RX GPIO number"
+	range 0 34
+	default 33
+	help
+		GPIO number (IOxx) for BLE UART RX input.
+
+config BLE_UART_BITRATE
+    depends on BTDM_CONTROLLER_MODE_BTDM
+    int "BLE UART baud rate"
+	range 9600 1843200
+	default 19200
+	help
+		BLE UART data transfer rate in bits per second.
+
+config BLE_UART_PARITY
+    depends on BTDM_CONTROLLER_MODE_BTDM
+    bool "BLE adapter use parity"
+	default y
+	help
+		Enable BLE adapter parity. If enabled the BLE UART port expects even parity.
 
 endmenu

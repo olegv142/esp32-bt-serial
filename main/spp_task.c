@@ -122,6 +122,7 @@ void spp_wr_task_start_up(spp_wr_task_cb_t p_cback, int fd)
 {
     xTaskCreate(p_cback, "write_read", 2048, (void *)fd, 5, NULL);
 }
+
 void spp_wr_task_shut_down(void)
 {
     vTaskDelete(NULL);

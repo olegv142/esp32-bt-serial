@@ -37,9 +37,9 @@
 #include "esp_vfs.h"
 #include "sys/unistd.h"
 
-#include "sdkconfig.h"
+#include "ble_server.h"
 
-#define SPP_TAG "SPP_ACCEPTOR_DEMO"
+#define SPP_TAG "SPP_ACCEPTOR"
 #define SPP_SERVER_NAME "SPP_SERVER"
 
 #define BT_DEV_NAME_PREFIX CONFIG_DEV_NAME_PREFIX
@@ -71,7 +71,11 @@
 #endif
 
 #define BT_UART_FLOWCTRL_ALT UART_HW_FLOWCTRL_DISABLE
+#ifdef CONFIG_ALT_UART_PARITY
 #define BT_UART_PARITY_ALT   UART_PARITY_EVEN
+#else
+#define BT_UART_PARITY_ALT   UART_HW_FLOWCTRL_DISABLE
+#endif
 
 #define BT_UART_RX_BUF_SZ (1024 * CONFIG_UART_RX_BUFF_SIZE)
 #define BT_UART_TX_BUF_SZ (1024 * CONFIG_UART_TX_BUFF_SIZE)
@@ -81,18 +85,20 @@ static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_VFS;
 static const esp_spp_sec_t sec_mask = ESP_SPP_SEC_AUTHENTICATE;
 static const esp_spp_role_t role_slave = ESP_SPP_ROLE_SLAVE;
 
-#define SPP_BUFF_SZ 128
+#define SPP_BUFF_SZ UART_FIFO_LEN
 static uint8_t spp_buff[SPP_BUFF_SZ];
 
 static bool alt_settings;
 
+#define BT_UART UART_NUM_1
+
 static int uart_to_bt(int bt_fd, TickType_t ticks_to_wait)
 {
-    int size = uart_read_bytes(UART_NUM_1, spp_buff, SPP_BUFF_SZ, ticks_to_wait);
+    int size = uart_read_bytes(BT_UART, spp_buff, SPP_BUFF_SZ, ticks_to_wait);
     if (size <= 0) {
         return 0;
     }
-    ESP_LOGI(SPP_TAG, "UART -> %d bytes", size);
+    ESP_LOGD(SPP_TAG, "UART -> %d bytes", size);
     uint8_t* ptr = spp_buff;
     int remain = size;
     while (remain > 0)
@@ -105,54 +111,43 @@ static int uart_to_bt(int bt_fd, TickType_t ticks_to_wait)
             vTaskDelay(1);
             continue;
         }
-        ESP_LOGI(SPP_TAG, "BT <- %d bytes", res);
+        ESP_LOGD(SPP_TAG, "BT <- %d bytes", res);
         remain -= res;
         ptr  += res;
     }
     return size;
 }
 
-#define SPP_BULK_RD_THRESHOLD 512
-
 static void spp_read_handle(void * param)
 {
     int fd = (int)param;
 
-    ESP_LOGI(SPP_TAG, "BT connected");
+    ESP_LOGI(SPP_TAG, "BT connected, %u bytes free", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
     gpio_set_level(BT_CONNECTED_GPIO, BT_LED_CONNECTED);
-    uart_flush(UART_NUM_1);
+    uart_flush(BT_UART);
 
     for (;;)
     {
-        size_t avail_now = 0;
-        uart_get_buffered_data_len(UART_NUM_1, &avail_now);
-        if (avail_now >= SPP_BULK_RD_THRESHOLD) {
-            // Send available data from UART to BT first
-            int remain = avail_now;
-            while (remain >= SPP_BUFF_SZ) {
-                int tx_size = uart_to_bt(fd, 0);
-                if (tx_size < 0)
-                    goto disconnected;
-                if (!tx_size)
-                    break;
-                remain -= tx_size;
-            }
+        TickType_t ticks_to_wait = 1;
+        // Send available data from UART to BT first
+        for (;;) {
+            int tx_size = uart_to_bt(fd, ticks_to_wait);
+            if (tx_size < 0)
+                goto disconnected;
+            if (!tx_size)
+                break;
+            ticks_to_wait = 0;
         }
         // Try receive data from BT
-        int size = read(fd, spp_buff, SPP_BUFF_SZ);
+        int const size = read(fd, spp_buff, SPP_BUFF_SZ);
         if (size < 0) {
             goto disconnected;
         }
         if (size > 0) {
-            ESP_LOGI(SPP_TAG, "BT -> %d bytes -> UART", size);
-            uart_write_bytes(UART_NUM_1, (const char *)spp_buff, size);
-            continue;
+            ESP_LOGD(SPP_TAG, "BT -> %d bytes -> UART", size);
+            uart_write_bytes(BT_UART, (const char *)spp_buff, size);
         }
-        if (avail_now < SPP_BULK_RD_THRESHOLD) {
-            // Read UART waiting several ticks for the new data
-            if (uart_to_bt(fd, avail_now ? 1 : 2) < 0)
-                goto disconnected;
-        }
+        taskYIELD();
     }
 
 disconnected:
@@ -173,30 +168,35 @@ static inline char byte_signature(uint8_t v)
 
 #define BT_MAC_LEN 6
 
-static void bt_set_device_name(void)
+static const char* bt_get_dev_name(void)
 {
-    char dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX;
+    static char dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX;
     const uint8_t * mac = esp_bt_dev_get_address();
     int i;
     for (i = 0; i < BT_MAC_LEN; ++i) {
         dev_name[BT_DEV_NAME_PREFIX_LEN + i] = byte_signature(mac[i]);
     }
     dev_name[BT_DEV_NAME_PREFIX_LEN + BT_MAC_LEN] = 0;
-    ESP_ERROR_CHECK(esp_bt_dev_set_device_name(dev_name));
     ESP_LOGI(SPP_TAG, "Device name is %s", dev_name);
+    return dev_name;
 }
 
-static void bt_set_alt_device_name(void)
+static const char* bt_get_alt_dev_name(void)
 {
-    char dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX_ALT;
+    static char dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN + 1] = BT_DEV_NAME_PREFIX_ALT;
     const uint8_t * mac = esp_bt_dev_get_address();
     int i;
     for (i = 0; i < BT_MAC_LEN; ++i) {
         dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + i] = byte_signature(mac[i]);
     }
     dev_name[BT_DEV_NAME_PREFIX_LEN_ALT + BT_MAC_LEN] = 0;
-    ESP_ERROR_CHECK(esp_bt_dev_set_device_name(dev_name));
     ESP_LOGI(SPP_TAG, "Device name (alt) is %s", dev_name);
+    return dev_name;
+}
+
+const char* get_device_name(void)
+{
+    return alt_settings ? bt_get_alt_dev_name() : bt_get_dev_name();
 }
 
 static void esp_spp_cb(uint16_t e, void *p)
@@ -207,10 +207,7 @@ static void esp_spp_cb(uint16_t e, void *p)
     switch (event) {
     case ESP_SPP_INIT_EVT:
         ESP_LOGI(SPP_TAG, "ESP_SPP_INIT_EVT");
-		if (alt_settings)
-			bt_set_alt_device_name();
-		else
-			bt_set_device_name();
+        ESP_ERROR_CHECK(esp_bt_dev_set_device_name(get_device_name()));
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
         esp_spp_start_srv(sec_mask,role_slave, 0, SPP_SERVER_NAME);
         break;
@@ -282,10 +279,9 @@ void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     case ESP_BT_GAP_KEY_REQ_EVT:
         ESP_LOGI(SPP_TAG, "ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
         break;
-    default: {
+    default:
         ESP_LOGI(SPP_TAG, "event: %d", event);
         break;
-    }
     }
     return;
 }
@@ -318,9 +314,9 @@ void app_main()
         .rx_flow_ctrl_thresh = UART_FIFO_LEN - 4
     };
 
-    ESP_ERROR_CHECK(uart_param_config(UART_NUM_1, &uart_config));
-    ESP_ERROR_CHECK(uart_set_pin(UART_NUM_1, BT_UART_TX_GPIO, BT_UART_RX_GPIO, BT_UART_RTS_GPIO, BT_UART_CTS_GPIO));
-    ESP_ERROR_CHECK(uart_driver_install(UART_NUM_1, BT_UART_RX_BUF_SZ, BT_UART_TX_BUF_SZ, 0, NULL, 0));
+    ESP_ERROR_CHECK(uart_param_config(BT_UART, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(BT_UART, BT_UART_TX_GPIO, BT_UART_RX_GPIO, BT_UART_RTS_GPIO, BT_UART_CTS_GPIO));
+    ESP_ERROR_CHECK(uart_driver_install(BT_UART, BT_UART_RX_BUF_SZ, BT_UART_TX_BUF_SZ, 0, NULL, 0));
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -329,7 +325,9 @@ void app_main()
     }
     ESP_ERROR_CHECK( ret );
 
+#ifndef BLE_ADAPTER_EN
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_BLE));
+#endif
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     if (esp_bt_controller_init(&bt_cfg) != ESP_OK) {
@@ -337,7 +335,13 @@ void app_main()
         return;
     }
 
-    if (esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT) != ESP_OK) {
+#ifndef BLE_ADAPTER_EN
+#define BT_MODE ESP_BT_MODE_CLASSIC_BT
+#else
+#define BT_MODE ESP_BT_MODE_BTDM
+#endif
+
+    if (esp_bt_controller_enable(BT_MODE) != ESP_OK) {
         ESP_LOGE(SPP_TAG, "%s enable controller failed", __func__);
         return;
     }
@@ -381,5 +385,9 @@ void app_main()
     esp_bt_pin_type_t pin_type = ESP_BT_PIN_TYPE_VARIABLE;
     esp_bt_pin_code_t pin_code;
     esp_bt_gap_set_pin(pin_type, 0, pin_code);
+
+#ifdef BLE_ADAPTER_EN
+    ble_server_init();
+#endif
 }
 
