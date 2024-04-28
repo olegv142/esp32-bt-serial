@@ -126,9 +126,10 @@ static void spp_read_handle(void * param)
     gpio_set_level(BT_CONNECTED_GPIO, BT_LED_CONNECTED);
     uart_flush(BT_UART);
 
+    TickType_t ticks_to_wait = 1;
+
     for (;;)
     {
-        TickType_t ticks_to_wait = 1;
         // Send available data from UART to BT first
         for (;;) {
             int tx_size = uart_to_bt(fd, ticks_to_wait);
@@ -146,8 +147,8 @@ static void spp_read_handle(void * param)
         if (size > 0) {
             ESP_LOGD(SPP_TAG, "BT -> %d bytes -> UART", size);
             uart_write_bytes(BT_UART, (const char *)spp_buff, size);
-        }
-        taskYIELD();
+        } else
+            ticks_to_wait = 1;
     }
 
 disconnected:
