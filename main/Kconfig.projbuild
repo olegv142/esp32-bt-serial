@@ -105,9 +105,9 @@ config ALT_UART_PARITY
 config DEV_NAME_BLE
     depends on BTDM_CONTROLLER_MODE_BTDM
     string "Bluetooth LE device name"
-	default "EnSpectrPw"
+	default "EsPw"
 	help
-		The name of the bluetooth LE device. Its shown by web BLE applications only.
+		The name of the bluetooth LE device. It will be followed by serial number based on the MAC address. Its shown by web BLE applications only.
 
 config BLE_UART_RX_GPIO
     depends on BTDM_CONTROLLER_MODE_BTDM
