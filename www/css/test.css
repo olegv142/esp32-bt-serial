@@ -1,0 +1,15 @@
+body {
+	font-family: sans-serif;
+}
+
+table {
+	border: 0;
+}
+
+td {
+	padding: .1em;
+}
+
+textarea {
+	width: 100%;
+}
