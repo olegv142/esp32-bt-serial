@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>BLE test</title>
+    <link rel="icon" href="favicon.ico"/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="BLE test">
+    <link href="css/test.css" rel="stylesheet">
+  </head>
+<body>
+  <table>
+  <tr>
+  <td colspan="2"><button type="button" id="bt-btn">Connect</button></td>
+  </tr>
+  <tr>
+  <td colspan="2"><textarea id="rx-msg" rows="32" cols="32" disabled="true" readonly></textarea></td>
+  </tr>
+  <tr>
+  <td>chunks tot/bad:</td><td>msgs tot/bad:</td>
+  </tr>
+  <tr>
+  <td id="chunks">0 / 0</td><td id="msgs">0 / 0</td>
+  </tr>
+  </table>
+  <script src="js/test.js"></script>
+</body>
+</html>
