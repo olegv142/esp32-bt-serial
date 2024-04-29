@@ -39,7 +39,7 @@ with Serial(sys.argv[1], baudrate=serial_baud_rate, parity=serial_parity, timeou
 	try:
 		while True:
 			s = random_str(random.randrange(1, max_len))
-			msg = s + '_' + s + '#'
+			msg = '#' + s + '_' + s
 			com.write(msg)
 			resp = read_resp(com)
 			total_bytes += len(msg) + len(resp)
