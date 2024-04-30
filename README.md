@@ -4,6 +4,7 @@ ESP32 dual mode bluetooth to serial port bridge
 ## Motivation
 
 Most existing bluetooth bridges are based on the Bluecore 4 chip. It is pretty old and has issues while working with baud rates higher than default 115200. The hardware flow control implementation on this family of devices seems to be the kind of the software one. The RTS signal may be delayed by an arbitrary amount of time so that working on baud rates higher than default leads to random buffer overflow and data lost unless you always transferring small chunks of data fitting entirely onto the receiver buffer.
+
 The ESP32 on the other hand provides an excellent platform for BT to UART bridge implementation. It even supports working in classic BT and BT low energy (BLE) modes simultaneously. This project was developed in attempt to create flexible wireless communication solution for some embedded controller. Typically it needs fast interface for commands and responses with option for using it for firmware update. Such communication channel is best implemented over classic Bluetooth link. The BLE channel has its own benefits though. The host side of the BLE connection may be implemented in web page using web BLE API. Such approach allows you to write code once and run it in the browser on all popular desktop and mobile platforms such as Windows, Linux, Android and iOS. Since BLE channel is slow its best suited for controller monitoring. Currently this project implements it in one way only transmitting data from controller to monitoring application.
 
 ## Configuring
