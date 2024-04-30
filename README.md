@@ -65,4 +65,5 @@ For esp-idf installation instructions see https://docs.espressif.com/projects/es
 ## Useful links
 
 Yet another BLE web page example: https://github.com/enspectr/ble-term
+
 Ethernet to serial adapter based on ESP32: https://github.com/olegv142/esp32-eth-serial
