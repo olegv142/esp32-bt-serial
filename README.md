@@ -27,12 +27,14 @@ Pulling IO4 low while powering on activates alternative settings for baud rate a
 
 While in alternative mode the IO32 output is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the other MCU that is normally driving EN input. If alt mode output is connected to EN input it will keep ESP32 module active while upgrading firmware of the controlling MCU.
 
-In alternative mode the hardware flow control is not used. The serial communication uses even parity bit (to be compatible with STM32 boot-loader) in alternative mode though it may be disabled in config.
+In alternative mode the hardware flow control is not used. The serial communication uses even parity bit (to be compatible with STM32 boot-loader) though it may be disabled in config.
 
 ## BLE adapter
 
 The BLE communication channel uses separate BLE_RXD data input. It expects even parity bit by default though it may be disabled in config. Hardware flow control is not used.
-The BLE transmits data received from serial input by updating 'characteristic' since BLE has no notion of the serial communication channel at all. Updates are delivered to monitoring application which subscribes to them. In theory this mechanism is inherently unreliable since the update may be lost. Though reliable update delivery is possible (its called 'indication') the web BLE API does not support such mechanism. To control updates delivery the BLE adapter adds sequence tag as the first symbol of the characteristic value. The sequence tag is assigned a values from 16 characters sequence 'a', 'b', .. 'p'. The next update uses next letter as sequence tag. The 'p' letter is followed by the 'a' again. The sequence tag symbol is followed by the data to be transmitted. The receiving application may use sequence tags to detect lost chunks of data transmitted or just ignore them. An example web page receiving BLE data with sequence tags validation may be found in *www* folder.
+The BLE transmits data received from serial input by updating 'characteristic' since BLE has no notion of the serial communication channel at all. Updates are delivered to monitoring application which subscribes to them. In theory this mechanism is inherently unreliable since the update may be lost. Though reliable update delivery is possible (its called 'indication') the web BLE API does not support such mechanism.
+
+To control updates delivery the BLE adapter adds sequence tag as the first symbol of the characteristic value. The sequence tag is assigned a values from 16 characters sequence 'a', 'b', .. 'p'. The next update uses next letter as sequence tag. The 'p' letter is followed by the 'a' again. The sequence tag symbol is followed by the data to be transmitted. The receiving application may use sequence tags to detect lost chunks of data transmitted or just ignore them. An example web page receiving BLE data with sequence tags validation may be found in *www* folder.
 
 ## Testing
 
