@@ -36,6 +36,8 @@ The BLE transmits data received from serial input by updating 'characteristic' s
 
 To control updates delivery the BLE adapter adds sequence tag as the first symbol of the characteristic value. The sequence tag is assigned a values from 16 characters sequence 'a', 'b', .. 'p'. The next update uses next letter as sequence tag. The 'p' letter is followed by the 'a' again. The sequence tag symbol is followed by the data to be transmitted. The receiving application may use sequence tags to detect lost chunks of data transmitted or just ignore them. An example web page receiving BLE data with sequence tags validation may be found in *www* folder.
 
+If you don't need BLE communication channel it may be disabled completely by setting Bluetooth controller mode to *BR/EDR Only* instead of *Dual Mode* in *Components config*.
+
 ## Testing
 
 The test folder contains two python2 scripts for classic BT and BLE channels testing. The *bt_echo.py* sends random data to the given BT device and expects to receive the same data in response. To run this test one should enable CTS flow control and connect RX-TX and RTS-CTS pins so the adapter will send the same data back. The *ble_test.py* sends randomly generated messages to given serial port which should be connected to BLE_RXD input. The web page in *www* folder receives such data and validate it. It prints data received as well as total and corrupt count of fragments and messages received. The test web page is also available at address https://olegv142.github.io/esp32-bt-serial/www/
