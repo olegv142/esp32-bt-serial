@@ -23,7 +23,7 @@ You can use hardware flow control CTS/RTS lines or ignore them depending on your
 
 ## Alternative settings
 
-Pulling low nALT (IO4 by default) input pin while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate settings for flashing firmware for example. With this application in mind the serial protocol in alt mode does not use hardware flow control but does transmit even parity bit (to be compatible with STM32 boot-loader) though it may be disabled in config. Leave nALT pin floating if alternative setting are not required.
+Pulling low nALT input pin (IO4 by default) while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate settings for flashing firmware for example. With this application in mind the serial protocol in alt mode does not use hardware flow control but does transmit even parity bit (to be compatible with STM32 boot-loader) though it may be disabled in config. Leave nALT pin floating if alternative setting are not required.
 
 While in alternative mode the ALT indicator pin (IO32 by default) is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the controller that is normally driving EN input. If ALT indicator pin is connected to EN input it will keep ESP32 module active while upgrading firmware of the controller.
 
@@ -38,7 +38,7 @@ If you don't need BLE communication channel it may be disabled completely by set
 
 ## Testing
 
-The test folder contains two python2 scripts for classic BT and BLE channels testing. The *bt_echo.py* sends random data to the given BT device and expects to receive the same data in response. To run this test one should enable CTS flow control and connect RX-TX and RTS-CTS pins so the adapter will send the same data back. The *ble_test.py* sends randomly generated messages to given serial port which should be connected to BLE_RXD input. The web page in *www* folder receives such data and validate it. It prints data received as well as total and corrupt count of fragments and messages received. The test web page is also available at address https://olegv142.github.io/esp32-bt-serial/www/
+The test folder contains two python2 scripts for classic BT and BLE channels testing. The *bt_echo.py* sends random data to the given BT device and expects to receive the same data in response. To run this test one should enable CTS flow control and connect RX-TX and RTS-CTS pins so the adapter will send the same data back. The *ble_test.py* sends randomly generated messages to given serial port which should be connected to BLE_RXD input. The web page in *www* folder receives such data and validate it. It prints data received as well as the total count and the number of corrupt fragments and messages. The test web page is also available at address https://olegv142.github.io/esp32-bt-serial/www/
 
 ## Troubleshooting
 
