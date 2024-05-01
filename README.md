@@ -5,7 +5,7 @@ ESP32 dual mode bluetooth to serial port bridge
 
 Most existing bluetooth bridges are based on the Bluecore 4 chip. It is pretty old and has issues while working with baud rates higher than default 115200. The hardware flow control implementation on this family of devices seems to be the kind of the software one. The RTS signal may be delayed by an arbitrary amount of time so that working on baud rates higher than default leads to random buffer overflow and data lost unless you always transferring small chunks of data fitting entirely onto the receiver buffer.
 
-The ESP32 on the other hand provides an excellent platform for BT to UART bridge implementation. It even supports working in classic BT and BT low energy (BLE) modes simultaneously. This project was developed in attempt to create flexible wireless communication solution for some embedded controller. Typically it needs fast interface for commands and responses with option for using it for firmware update. Such communication channel is best implemented over classic Bluetooth link. The BLE channel has its own benefits though. The host side of the BLE connection may be implemented in web page using web BLE API. Such approach allows you to write code once and run it in the browser on all popular desktop and mobile platforms such as Windows, Linux, Android and iOS. Since BLE channel is slow its best suited for controller monitoring. Currently this project implements it in one way only transmitting data from controller to monitoring application.
+The ESP32 on the other hand provides an excellent platform for BT to UART bridge implementation. It even supports working in classic BT and BT low energy (BLE) modes simultaneously. This project was developed in attempt to create flexible wireless communication solution for some embedded controller. Typically it needs fast interface for commands and responses with option for using it for firmware update. Such communication channel is best implemented over classic Bluetooth link. The BLE channel has its own benefits though. The host side of the BLE connection may be implemented in web page using web BLE API. Such approach allows you to write code once and run it in the browser on all popular desktop and mobile platforms such as Windows, Linux, Android and iOS. Since BLE channel is slow its best suited for controller monitoring. Currently this project implements it in one direction only transmitting data from controller to monitoring application.
 
 ## Configuring
 
@@ -13,7 +13,7 @@ The bridge has connection indicator output, serial data RX/TX lines and flow con
 
 ## Flashing
 
-Unless you have dev kit with USB programmer included you will need some minimal wiring made to the ESP32 module to be able to flash it. The following figure shows an example of such setup with programming connections shown in blue. The connections providing serial interface to your system are shown in black.
+Unless you have dev kit with USB programmer included you will need some minimal wiring made to the ESP32 module to be able to flash it. The following figure shows an example of such setup with programming connections shown in blue. The connections providing interface to your system are shown in black.
 ![ESP32 module wiring](https://github.com/olegv142/esp32-bt-serial/blob/master/doc/wiring.png)
 You can use virtually any USB-serial bridge capable of working at 115200 baud. The IO0 pin should be connected to the ground while powering up the module in order to turn it onto serial programming mode. After that you can issue *make flash* command in the project directory and wait for the flashing completion. Then turn off power, disconnect programming circuit and enjoy using your brand new bluetooth serial bridge.
 
@@ -23,9 +23,9 @@ You can use hardware flow control CTS/RTS lines or ignore them depending on your
 
 ## Alternative settings
 
-Pulling IO4 low while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate settings for flashing firmware for example. With this application in mind the serial protocol in alt mode does not use hardware flow control but does transmit even parity bit (to be compatible with STM32 boot-loader) though it may be disabled in config. Leave IO4 floating if alternative setting are not required.
+Pulling low nALT (IO4 by default) input pin while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate settings for flashing firmware for example. With this application in mind the serial protocol in alt mode does not use hardware flow control but does transmit even parity bit (to be compatible with STM32 boot-loader) though it may be disabled in config. Leave nALT pin floating if alternative setting are not required.
 
-While in alternative mode the ALT mode indicator pin (IO32 by default) output is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the controller that is normally driving EN input. If ALT mode indicator pin is connected to EN input it will keep ESP32 module active while upgrading firmware of the controller.
+While in alternative mode the ALT indicator pin (IO32 by default) is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the controller that is normally driving EN input. If ALT indicator pin is connected to EN input it will keep ESP32 module active while upgrading firmware of the controller.
 
 ## BLE adapter
 
