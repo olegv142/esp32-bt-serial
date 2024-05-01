@@ -25,7 +25,7 @@ You can use hardware flow control CTS/RTS lines or ignore them depending on your
 
 Pulling IO4 low while powering on activates alternative settings for baud rate and device name. It may be handy in case you need separate settings for flashing firmware for example. With this application in mind the serial protocol in alt mode does not use hardware flow control but does transmit even parity bit (to be compatible with STM32 boot-loader) though it may be disabled in config. Leave IO4 floating if alternative setting are not required.
 
-While in alternative mode the IO32 output is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the other MCU that is normally driving EN input. If alt mode output is connected to EN input it will keep ESP32 module active while upgrading firmware of the controlling MCU.
+While in alternative mode the ALT mode indicator pin (IO32 by default) output is pulled high. Otherwise it is left in high impedance state. Such behavior is handy in case the alternative mode is used for upgrading firmware of the other MCU that is normally driving EN input. If ALT mode indicator pin is connected to EN input it will keep ESP32 module active while upgrading firmware of the controlling MCU.
 
 ## BLE adapter
 
