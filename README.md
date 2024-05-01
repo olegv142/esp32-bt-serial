@@ -38,7 +38,7 @@ If you don't need BLE communication channel it may be disabled completely by set
 
 ## Testing
 
-The test folder contains two python2 scripts for classic BT and BLE channels testing. The *bt_echo.py* sends random data to the given BT device and expects to receive the same data in response. To run this test one should enable CTS flow control and connect RX-TX and RTS-CTS pins so the adapter will send the same data back. The *ble_test.py* sends randomly generated messages to given serial port which should be connected to BLE_RXD input. The web page in *www* folder receives such data and validate it. It prints data received as well as the total count and the number of corrupt fragments and messages. The test web page is also available at address https://olegv142.github.io/esp32-bt-serial/www/
+The *test* folder contains two python2 scripts for classic BT and BLE channels testing. The *bt_echo.py* sends random data to the given BT device and expects to receive the same data in response. To run this test one should enable CTS flow control and connect RX-TX and RTS-CTS pins so the adapter will send the same data back. The *ble_test.py* sends randomly generated messages to given serial port which should be connected to BLE_RXD input. The web page in *www* folder receives such data and validates it. It prints data received as well as the total count / the number of corrupt fragments and messages. The test web page is also available at address https://olegv142.github.io/esp32-bt-serial/www/
 
 ## Troubleshooting
 
