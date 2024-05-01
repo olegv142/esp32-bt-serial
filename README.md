@@ -32,7 +32,7 @@ While in alternative mode the ALT indicator pin (IO32 by default) is pulled high
 The BLE communication channel uses separate BLE_RXD data input. It expects even parity bit by default though it may be disabled in config. Hardware flow control is not used.
 The BLE transmits data received from serial input by updating 'characteristic' since BLE has no notion of the serial communication channel at all. Updates are delivered to monitoring application which subscribes to them. In theory this mechanism is inherently unreliable since the update may be lost. Though reliable update delivery is possible (its called 'indication') the web BLE API does not support such mechanism.
 
-To control updates delivery the BLE adapter adds sequence tag as the first symbol of the characteristic value. The sequence tag is assigned a values from 16 characters sequence 'a', 'b', .. 'p'. The next update uses next letter as sequence tag. The 'p' letter is followed by the 'a' again. The sequence tag symbol is followed by the data to be transmitted. The receiving application may use sequence tags to detect lost chunks of data transmitted or just ignore them. An example web page receiving BLE data with sequence tags validation may be found in *www* folder.
+To control updates delivery the BLE adapter inserts sequence tag as the first symbol of the characteristic value. The sequence tag is assigned a values from 16 characters sequence 'a', 'b', .. 'p'. The next update uses next letter as sequence tag. The 'p' letter is followed by the 'a' again. The sequence tag symbol is followed by the data to be transmitted. The receiving application may use sequence tags to detect lost chunks of data transmitted or just ignore them. An example web page receiving BLE data with sequence tags validation may be found in *www* folder.
 
 If you don't need BLE communication channel it may be disabled completely by setting Bluetooth controller mode to *BR/EDR Only* instead of *Dual Mode* in *Components config*.
 
@@ -54,16 +54,16 @@ Exceptional. Several timer better than with anything based on the Bluecore chips
 
 ## Known issues
 
-Working in classic BT and BLE modes simultaneously is tricky since they use the same transceiver and the same frequency band. So the frequency band should be shared between them properly which apparently is not always done by esp-idf. An attempt to connect to the adapter using classic BT while BLE is already paired with monitoring application and sending data to it may fail. The BT stack on windows host may even loose the ability to connect to this adapter till the system reboot. On the other hand the BLE pairing while classic BT connection is established is always possible.
+Working in classic BT and BLE modes simultaneously is tricky since they use the same transceiver and the same frequency band. So the frequency band should be shared between them properly which apparently is not always done by esp-idf framework. An attempt to connect to the adapter using classic BT while BLE is already paired with monitoring application and sending data to it may fail. The BT stack on windows host may even loose the ability to connect to this adapter till the system reboot. On the other hand the BLE pairing while classic BT connection is established is always possible.
 
 ## Building
 
 The code can be built with esp-idf version 3.2.5. Later versions of esp-idf need code modifications to build and work properly. Yet newer versions of esp-idf don't improve stability in any way so I decided to keep code based on older version.
-
-For esp-idf installation instructions see https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html
 
 ## Useful links
 
 Yet another BLE web page example: https://github.com/enspectr/ble-term
 
 Ethernet to serial adapter based on ESP32: https://github.com/olegv142/esp32-eth-serial
+
+Esp-idf installation instructions: https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html
