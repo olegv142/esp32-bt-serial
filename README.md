@@ -56,6 +56,8 @@ Exceptional. Several timer better than with anything based on the Bluecore chips
 
 Working in classic BT and BLE modes simultaneously is tricky since they use the same transceiver and the same frequency band. So the frequency band should be shared between them properly which apparently is not always done by esp-idf framework. An attempt to connect to the adapter using classic BT while BLE is already paired with monitoring application and sending data to it may fail. The BT stack on windows host may even loose the ability to connect to this adapter till the system reboot. On the other hand the BLE pairing while classic BT connection is established is always possible.
 
+I had to carefully choose BLE advertising flags to make adapter working on various operating systems. The BR_EDR_NOT_SUPPORTED flag is set since setting dual mode flag breaks ability to connect to device on Linux. This is the only flag set on advertising packet since setting connectivity flag leads to listing two devices with identical names on attempt to pair with adapter from Windows host.
+
 ## Building
 
 The code can be built with esp-idf version 3.2.5. Later versions of esp-idf need code modifications to build and work properly. Yet newer versions of esp-idf don't improve stability in any way so I decided to keep code based on older version.
