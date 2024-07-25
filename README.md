@@ -64,7 +64,9 @@ The code can be built with esp-idf version 3.2.5. Later versions of esp-idf need
 
 ## Useful links
 
-Yet another BLE web page example: https://github.com/enspectr/ble-term
+ESP32 BLE receiver / transmitter examples for Arduino https://github.com/olegv142/esp32-ble
+
+Example of the BLE receiver implemented in web page: https://github.com/enspectr/ble-term
 
 Ethernet to serial adapter based on ESP32: https://github.com/olegv142/esp32-eth-serial
 
